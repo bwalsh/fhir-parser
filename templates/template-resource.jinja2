@@ -74,9 +74,24 @@ class {{ klass.name }}({% if klass.superclass in imports %}{{ klass.superclass.m
         # but use in your own responsibilities, read official FHIR documentation.
 		enum_values={{ prop.enum|tojson }},
         {%- endif %}
+        {%- if prop.binding%}
+            # valueset binding
+            {%- if prop.binding.description%}
+            binding_description={{ prop.binding.description|tojson }},
+            {%- endif %}
+            binding_strength={{ prop.binding.strength|tojson }},
+            {%- if prop.binding.uri%}
+            binding_uri={{ prop.binding.uri|tojson }},
+            {%- endif %}
+            {%- if prop.binding.version%}
+            binding_version={{ prop.binding.version|tojson}},
+            {%- endif %}
+        {%- endif %}
+
         {%- if prop.reference_to_names|length > 0 %}
         # note: Listed Resource Type(s) should be allowed as Reference.
 		enum_reference_types={{ prop.reference_to_names|tojson }},
+		backref="{{ prop.parent_name|underscore}}_{{ prop.name }}"
         {%- endif %}
 	)
     {%- if prop.need_primitive_ext and klass.name != "Extension" %}

@@ -6,6 +6,8 @@ import os
 import re
 import shutil
 import json
+
+import inflection
 from fhirspec import FHIR_CLASS_TYPES
 from fhirspec import FHIRClass
 
@@ -70,6 +72,7 @@ class FHIRRenderer(object):
         )
         self.jinjaenv.filters["string_wrap"] = string_wrap
         self.jinjaenv.filters["unique_func_name"] = unique_func_name
+        self.jinjaenv.filters["underscore"] = inflection.underscore
 
     def render(self):
         """The main rendering start point, for subclasses to override."""
@@ -245,8 +248,25 @@ class FHIRStructureDefinitionRenderer(FHIRRenderer):
                         one_of_many_fields[klass.name][prop.one_of_many].append(
                             prop.name
                         )
+
+                    # Include url of the valueset in documentation
+                    if prop.binding and prop.binding.uri:
+                        prop.formal = " ".join(
+                            [e for e in [prop.formal, f"See {prop.binding.uri}"] if e]
+                        )
+
+                        # TODO explore harvesting enumeration from code systems rather than prop.short
+                        # e.g.
+                        # try:
+                        #     codesystems = [self.spec.codesystems.get(i_['system'], None) for i_ in
+                        #                        self.spec.valuesets[prop.binding.uri].definition['compose']['include'] if 'system' in i_]
+                        #     codes = [code for sublist in [[c['code'] for c in cs.codes] for cs in codesystems if cs and cs.codes] for code in
+                        #              sublist]
+                        # except Exception as e:
+                        #     print(e)
+
                     # Check Enums
-                    if prop.field_type == "Code" and prop.short and "|" in prop.short:
+                    if prop.field_type in ["Code", "CodeableConceptType"] and prop.short and "|" in prop.short:
                         prop.enum = enum_list = list()
                         for item in map(lambda x: x.strip(), prop.short.split("|")):
                             parts = item.split(" ")
