@@ -4,6 +4,8 @@ requests>=2.13.0
 colorlog==2.10.0
 setuptools
 click
-fhirspec==0.4.0
+# fhirspec==0.4.0
+git+https://github.com/bwalsh/fhirspec.git@feature/valuesets
 pydantic
 antlr4-tools
+inflection
